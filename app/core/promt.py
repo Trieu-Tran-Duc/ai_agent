@@ -1,12 +1,16 @@
 def summary_prompt(text: str):
     return f"""
-You are a professional news summarizer.
+You are a crypto analyst.
 
-Summarize this text:
+Given multiple Bitcoin news articles:
 
-{text}
+1. Identify main topics
+2. Detect overall trend
+3. Summarize key insights
 
 Return:
-- Summary (3 sentences)
-- Sentiment (positive|neutral|negative)
+
+- Summary
+- Key topics
+- Trend (bullish / bearish / neutral)
 """

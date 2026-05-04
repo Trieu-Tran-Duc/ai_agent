@@ -1,34 +1,43 @@
-from app.tools.crawl import crawl_news
-from app.core.llm import call_llm
-from app.tools.article_extractor import extract_article
 import logging
-from app.core.promt import summary_prompt
+from app.tools.crawl_tool import crawl_news
+from app.utils import extract_article
+from app.configuration import setup_logging
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("pipeline")
+
 
 def run_pipeline(keyword):
-    logging.info(f"Start pipeline with keyword: {keyword}")
+    setup_logging(logging.INFO)
+    logger.info(f"Start pipeline with keyword: {keyword}")
 
+    # step 1: crawl news
     news_list = crawl_news(keyword)
-    
-    results = []
 
+    # step 2: extract article + summarize with LLM
+    articles = []
     for i, item in enumerate(news_list):
         print(f"Processing: {item['title']}")
 
         article = extract_article(item["link"])
 
         if "error" in article or not article.get("text"):
-            logging.warning(f"Failed to extract article: {item['link']} - {article.get('error', 'No text found')}")
+            logging.warning(f"Skip: {item['link']}")
             continue
 
-        prompt = summary_prompt(article["text"][:5000])
-        summary = call_llm(prompt)
-        logging.info(f"Summary generated for {keyword}: {summary}")
-        results.append({
-            "title": article["title"],
-            "summary": summary,
-            "url": item["link"]
-        })
+        articles.append(
+            {
+                "title": article["title"],
+                "content": article["text"][:2000],
+                "url": item["link"],
+            }
+        )
 
-    return results
+        articles = articles[:10]
+        if not articles:
+            logging.error("No valid articles")
+            return {"keyword": keyword, "articles": [], "error": "No valid articles collected"}
+
+        logging.info(f"Collected {len(articles)} articles")
+
+        # results = Agent.run({"articles": articles})
+        return {"keyword": keyword, "articles": articles}

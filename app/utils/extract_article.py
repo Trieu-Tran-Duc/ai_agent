@@ -28,6 +28,6 @@ def extract_article(url: str):
             "title": article.title,
             "text": article.text
         }
+
     except Exception as e:
-        logging.error(f"ERROR extracting article {url}: {e}")
-        return {"error": str(e)}
+        logging.warning(f"Newspaper failed: {url} - {e}")
