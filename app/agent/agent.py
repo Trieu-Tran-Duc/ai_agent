@@ -1,5 +1,8 @@
 from app.agent.prompt import build_prompt
 from app.agent.parser import parse_action
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 class Agent:
     def __init__(self, llm, tools):
@@ -15,6 +18,8 @@ class Agent:
 
             response = self.llm.generate(prompt)
 
+            logging.info(f"Agent response: {response}")
+
             action = parse_action(response)
 
             if not action:
@@ -28,6 +33,12 @@ class Agent:
 
             if tool_name not in self.tools:
                 raise Exception(f"Unknown tool {tool_name}")
+
+            if isinstance(tool_input, list):
+                tool_input = {"articles": tool_input}
+
+            if not isinstance(tool_input, dict):
+                raise Exception(f"Invalid tool input: {tool_input}")
 
             result = self.tools[tool_name].run({
                 **input_data,

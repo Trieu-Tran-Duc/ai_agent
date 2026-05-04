@@ -6,24 +6,36 @@ def build_prompt(goal, tools, history, input_data):
     return f"""
 You are an AI Agent.
 
-Goal: {goal}
+Goal:
+{goal}
 
-Input:
-{input_data}
+Input articles:
+{format_articles(input_data["articles"])}
 
 Available tools:
 {tool_desc}
 
 Rules:
-- Always use tools
-- Do not hallucinate
-- When done, return:
-Action: {{"tool": "finish", "input": {{"summary": "...", "trend": "..."}}}}
+- You MUST use tools
+- You MUST NOT generate final answer directly
+- You MUST follow the format EXACTLY
+- Output ONLY valid JSON after 'Action:'
+- "input" MUST be a JSON object (dictionary)
+- NEVER return a list as input, if tool requires list, wrap it in a dict, e.g. {{"articles": [...]}}
+
+When finished, return:
+Action: {{"tool": "finish", "input": {{"summary": "...", "trend": "bullish|bearish|neutral"}}}}
 
 Format:
-Thought: ...
-Action: {{"tool": "...", "input": {{...}}}}
+Thought: <your reasoning>
+Action: {{"tool": "<tool_name>", "input": {{...}}}}
 
 History:
 {history}
 """
+
+def format_articles(articles):
+    return "\n\n".join([
+        f"- {a['title']}: {a['content'][:200]}"
+        for a in articles
+    ])
